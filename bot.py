@@ -1,3 +1,5 @@
+import sys
+print("Python version:", sys.version)
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from handlers import commands, callbacks, game, dm
 from config import TOKEN
