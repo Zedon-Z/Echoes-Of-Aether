@@ -1,4 +1,10 @@
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Optional: loads .env when running locally
+
+TOKEN = os.getenv("TOKEN")  # 👈 Fetches from Railway variables
+
 MIN_PLAYERS = 6
 MAX_PLAYERS = 15
 NSFW_ENABLED = False
