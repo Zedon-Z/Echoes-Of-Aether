@@ -30,7 +30,8 @@ def run_bot():
     dp.add_handler(CommandHandler("authorize", commands.authorize))
     dp.add_handler(CommandHandler("deauthorize", commands.deauthorize))
     dp.add_handler(CommandHandler("flee", commands.flee))
-dp.add_handler(CommandHandler("extendtime", commands.extend_time))
+    dp.add_handler(CommandHandler("cancelgame", commands.cancel_game))
+    dp.add_handler(CommandHandler("extendtime", commands.extend_time))
     dp.add_handler(CallbackQueryHandler(callbacks.handle_callback))
     dp.add_handler(MessageHandler(Filters.private & Filters.text, dm.handle_dm))
 
