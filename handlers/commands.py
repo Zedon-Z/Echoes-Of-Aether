@@ -93,3 +93,28 @@ def force_start(update: Update, context: CallbackContext):
     phases.start_day_phase(chat_id, context)
 def get_chat_id(update: Update, context: CallbackContext):
     update.message.reply_text(f"Chat ID: `{update.effective_chat.id}`", parse_mode='Markdown')
+    
+from config import BOT_OWNER_ID
+from storage import authorized
+
+def authorize(update: Update, context: CallbackContext):
+    if update.effective_user.id != BOT_OWNER_ID:
+        update.message.reply_text("🚫 You are not authorized to do this.")
+        return
+
+    chat_id = update.effective_chat.id
+    if authorized.add_group(chat_id):
+        update.message.reply_text(f"✅ This group ({chat_id}) is now authorized.")
+    else:
+        update.message.reply_text("ℹ️ This group is already authorized.")
+
+def deauthorize(update: Update, context: CallbackContext):
+    if update.effective_user.id != BOT_OWNER_ID:
+        update.message.reply_text("🚫 You are not authorized to do this.")
+        return
+
+    chat_id = update.effective_chat.id
+    if authorized.remove_group(chat_id):
+        update.message.reply_text(f"❌ This group ({chat_id}) has been removed from authorized list.")
+    else:
+        update.message.reply_text("ℹ️ This group wasn't authorized.")
