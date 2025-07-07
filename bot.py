@@ -3,7 +3,20 @@ import os
 from threading import Thread
 from handlers import commands, callbacks, game, dm
 from config import TOKEN
+from telegram import BotCommand
 
+def set_bot_commands(updater):
+    commands = [
+        BotCommand("start", "Start the bot"),
+        BotCommand("startgame", "Start a new game"),
+        BotCommand("join", "Join the current match"),
+        BotCommand("forcestart", "Force the game to begin"),
+        BotCommand("vote", "Vote to eliminate a player"),
+        BotCommand("getchatid", "Get the current group chat ID"),
+        BotCommand("authorize", "Authorize this group (admin only)"),
+        BotCommand("deauthorize", "Deauthorize this group (admin only)")
+    ]
+    updater.bot.set_my_commands(commands)
 def run_bot():
     updater = Updater(token=TOKEN, use_context=True)
     dp = updater.dispatcher
