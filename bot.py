@@ -13,6 +13,7 @@ def run_bot():
     dp.add_handler(CommandHandler("join", commands.join_game))
     dp.add_handler(CommandHandler("vote", commands.vote))
     dp.add_handler(CommandHandler("phase", game.phase))
+    dp.add_handler(CommandHandler("getchatid", commands.get_chat_id))
     dp.add_handler(CallbackQueryHandler(callbacks.handle_callback))
     dp.add_handler(MessageHandler(Filters.private & Filters.text, dm.handle_dm))
 
