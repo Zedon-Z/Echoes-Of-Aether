@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 from storage import database as db
 from engine import phases
+import time 
 
 # Track join message ID to update later
 join_message_tracker = {}
@@ -12,25 +13,41 @@ def start(update: Update, context: CallbackContext):
         "Use /startgame to begin a new game, or /join to join one.",
         parse_mode='Markdown'
     )
+join_message_tracker = {}
 
+# ----- START GAME -----
 def start_game(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
+
     if db.is_game_active(chat_id):
         update.message.reply_text("⚠️ A game is already running!")
         return
 
     db.start_new_game(chat_id)
+    countdown = 60
+    db.set_timer(chat_id, countdown)
+    context.job_queue.run_once(phases.begin_game, countdown, context=chat_id)
+    db.set_game_start_time(chat_id, int(time.time()) + countdown)
 
+    # Static join message (does not change)
     join_btn = [[InlineKeyboardButton("🔹 Join Game", callback_data="join")]]
-    msg = update.message.reply_text(
-        text="🌀 *Echoes of Aether Begins!*\nClick below to join the match.\n\n*Players Joined:*\n_(Waiting...)_",
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="🌀 *Echoes of Aether Begins!*\nClick below to join the match!",
         reply_markup=InlineKeyboardMarkup(join_btn),
         parse_mode='Markdown'
     )
 
-    # Save message ID to update later
-    join_message_tracker[chat_id] = msg.message_id
+    # Player list message (will be updated)
+    player_msg = context.bot.send_message(
+        chat_id=chat_id,
+        text="📜 *Players Joined:*\n_(Waiting...)_",
+        parse_mode='Markdown'
+    )
+    join_message_tracker[chat_id] = player_msg.message_id
 
+
+# ----- JOIN GAME -----
 def join_game(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     user = update.effective_user
@@ -40,26 +57,36 @@ def join_game(update: Update, context: CallbackContext):
         return
 
     success = db.add_player(chat_id, user.id, user.full_name)
-    if success:
-        context.bot.send_message(chat_id, f"✅ {user.full_name} has joined the game.")
-    else:
-        context.bot.send_message(chat_id, f"ℹ️ {user.full_name}, you’re already in the game.")
+    if not success:
+        update.message.reply_text("ℹ️ You're already in the game.")
+        return
 
-    # Update original join message
+    # Update the main player list
     players = db.get_player_list(chat_id)
     player_text = "\n".join(f"• {name}" for name in players.values()) or "_Waiting..._"
 
-    join_btn = [[InlineKeyboardButton("🔹 Join Game", callback_data="join")]]
     try:
         context.bot.edit_message_text(
             chat_id=chat_id,
             message_id=join_message_tracker.get(chat_id),
-            text=f"🌀 *Echoes of Aether Begins!*\nClick below to join the match.\n\n*Players Joined:*\n{player_text}",
-            reply_markup=InlineKeyboardMarkup(join_btn),
+            text=f"📜 *Players Joined:*\n{player_text}",
             parse_mode='Markdown'
         )
     except:
-        pass  # Silent fail if message not found
+        pass
+
+    # Send fresh join button for others (without player list)
+    end_time = db.get_game_start_time(chat_id)
+    seconds_left = max(0, end_time - int(time.time()))
+    time_text = f"⏳ Game starts in *{seconds_left} seconds!*"
+
+    join_btn = [[InlineKeyboardButton("🔹 Join Game", callback_data="join")]]
+    context.bot.send_message(
+        chat_id=chat_id,
+        text=f"{user.full_name} joined!\n\n{time_text}",
+        reply_markup=InlineKeyboardMarkup(join_btn),
+        parse_mode='Markdown'
+    )
 
 def extend_time(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
