@@ -61,6 +61,16 @@ def join_game(update: Update, context: CallbackContext):
     except:
         pass  # Silent fail if message not found
 
+def extend_time(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+
+    if not db.is_game_active(chat_id):
+        update.message.reply_text("❌ No active game to extend time for.")
+        return
+
+    db.extend_timer(chat_id, 30)  # Extend by 30 seconds (or customize)
+    update.message.reply_text("⏳ Extra time added! Waiting for more players...")
+
 def flee(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     user = update.effective_user
