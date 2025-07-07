@@ -61,6 +61,19 @@ def join_game(update: Update, context: CallbackContext):
     except:
         pass  # Silent fail if message not found
 
+def flee(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    user = update.effective_user
+
+    if not db.is_game_active(chat_id):
+        update.message.reply_text("❌ There's no game to flee from.")
+        return
+
+    if db.remove_player(chat_id, user.id):
+        update.message.reply_text(f"{user.full_name} has left the game.")
+    else:
+        update.message.reply_text("You’re not part of the game.")
+
 def vote(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if not db.is_game_active(chat_id):
