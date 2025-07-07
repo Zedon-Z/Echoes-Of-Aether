@@ -168,3 +168,12 @@ def deauthorize(update: Update, context: CallbackContext):
         update.message.reply_text(f"❌ This group ({chat_id}) has been removed from authorized list.")
     else:
         update.message.reply_text("ℹ️ This group wasn't authorized.")
+def cancel_game(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+
+    if not db.is_game_active(chat_id):
+        update.message.reply_text("❌ There’s no active game to cancel.")
+        return
+
+    db.cancel_game(chat_id)
+    update.message.reply_text("🚫 The game has been *cancelled*. You can /startgame again if you wish.", parse_mode='Markdown')
