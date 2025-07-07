@@ -154,3 +154,14 @@ def set_game_start_time(chat_id, timestamp):
 
 def get_game_start_time(chat_id):
     return game_start_times.get(chat_id, int(time.time()))
+timers = {}
+
+def set_timer(chat_id, seconds):
+    timers[chat_id] = seconds
+
+def extend_timer(chat_id, seconds):
+    if chat_id in timers:
+        timers[chat_id] += seconds
+
+def get_timer(chat_id):
+    return timers.get(chat_id, 0)
