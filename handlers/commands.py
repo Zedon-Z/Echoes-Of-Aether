@@ -2,6 +2,10 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 from storage import database as db
 from engine import phases
+
+# Track join message ID to update later
+join_message_tracker = {}
+
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "👋 Welcome to *Echoes of Aether: The Silent War*.\n\n"
@@ -12,16 +16,20 @@ def start(update: Update, context: CallbackContext):
 def start_game(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if db.is_game_active(chat_id):
-        update.message.reply_text("A game is already running!")
+        update.message.reply_text("⚠️ A game is already running!")
         return
 
     db.start_new_game(chat_id)
-    join_btn = [[InlineKeyboardButton("Join Game", callback_data="join")]]
-    update.message.reply_text(
-        "🌀 *Echoes of Aether Begins!*\nClick below to join the match.",
+
+    join_btn = [[InlineKeyboardButton("🔹 Join Game", callback_data="join")]]
+    msg = update.message.reply_text(
+        text="🌀 *Echoes of Aether Begins!*\nClick below to join the match.\n\n*Players Joined:*\n_(Waiting...)_",
         reply_markup=InlineKeyboardMarkup(join_btn),
         parse_mode='Markdown'
     )
+
+    # Save message ID to update later
+    join_message_tracker[chat_id] = msg.message_id
 
 def join_game(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -33,9 +41,25 @@ def join_game(update: Update, context: CallbackContext):
 
     success = db.add_player(chat_id, user.id, user.full_name)
     if success:
-        update.message.reply_text(f"{user.full_name} has joined the game.")
+        context.bot.send_message(chat_id, f"✅ {user.full_name} has joined the game.")
     else:
-        update.message.reply_text("You’re already in the game.")
+        context.bot.send_message(chat_id, f"ℹ️ {user.full_name}, you’re already in the game.")
+
+    # Update original join message
+    players = db.get_player_list(chat_id)
+    player_text = "\n".join(f"• {name}" for name in players.values()) or "_Waiting..._"
+
+    join_btn = [[InlineKeyboardButton("🔹 Join Game", callback_data="join")]]
+    try:
+        context.bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=join_message_tracker.get(chat_id),
+            text=f"🌀 *Echoes of Aether Begins!*\nClick below to join the match.\n\n*Players Joined:*\n{player_text}",
+            reply_markup=InlineKeyboardMarkup(join_btn),
+            parse_mode='Markdown'
+        )
+    except:
+        pass  # Silent fail if message not found
 
 def vote(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -53,3 +77,17 @@ def vote(update: Update, context: CallbackContext):
         for pid, name in players.items()
     ]
     update.message.reply_text("🔍 *Vote for a suspect:*", reply_markup=InlineKeyboardMarkup(buttons), parse_mode='Markdown')
+
+def force_start(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    if not db.is_game_active(chat_id):
+        update.message.reply_text("❌ No game to start.")
+        return
+
+    players = db.get_player_list(chat_id)
+    if len(players) < 6:
+        update.message.reply_text("⚠️ At least 6 players are needed to start the game.")
+        return
+
+    update.message.reply_text("🚀 Game is starting...")
+    phases.start_day_phase(chat_id, context)
