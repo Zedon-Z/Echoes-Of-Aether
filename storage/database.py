@@ -147,3 +147,10 @@ def set_nexus_winner(user_id):
 def trigger_goat_prophecy():
     # Stub for future expansion
     pass
+game_start_times = {}
+
+def set_game_start_time(chat_id, timestamp):
+    game_start_times[chat_id] = timestamp
+
+def get_game_start_time(chat_id):
+    return game_start_times.get(chat_id, int(time.time()))
