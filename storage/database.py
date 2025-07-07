@@ -165,3 +165,8 @@ def extend_timer(chat_id, seconds):
 
 def get_timer(chat_id):
     return timers.get(chat_id, 0)
+    
+def cancel_game(chat_id):
+    games.pop(chat_id, None)
+    player_data.pop(chat_id, None)
+    game_start_times.pop(chat_id, None)
