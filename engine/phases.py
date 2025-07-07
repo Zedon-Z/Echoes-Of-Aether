@@ -15,3 +15,17 @@ def get_night_story():
         "Shadows whispered your name. Will you answer?"
     ]
     return random.choice(night_lines)
+    
+from storage import database as db
+
+def begin_game(context):
+    chat_id = context.job.context
+    if db.is_game_active(chat_id) and not db.has_game_started(chat_id):
+        players = db.get_player_list(chat_id)
+        if len(players) >= 6:
+            # Start the game
+            db.mark_game_started(chat_id)
+            context.bot.send_message(chat_id, "🎮 Game has started!")
+            # Assign roles, proceed to first phase, etc.
+        else:
+            context.bot.send_message(chat_id, "❌ Not enough players to begin.")
