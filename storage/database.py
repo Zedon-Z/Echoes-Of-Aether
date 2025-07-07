@@ -147,14 +147,13 @@ def set_nexus_winner(user_id):
 def trigger_goat_prophecy():
     # Stub for future expansion
     pass
-game_start_times = {}
 
 def set_game_start_time(chat_id, timestamp):
     game_start_times[chat_id] = timestamp
 
 def get_game_start_time(chat_id):
     return game_start_times.get(chat_id, int(time.time()))
-timers = {}
+    
 
 def set_timer(chat_id, seconds):
     timers[chat_id] = seconds
@@ -170,3 +169,12 @@ def cancel_game(chat_id):
     games.pop(chat_id, None)
     player_data.pop(chat_id, None)
     game_start_times.pop(chat_id, None)
+
+# Inside storage/database.py
+ # Your in-memory storage
+
+def remove_player(chat_id, user_id):
+    if chat_id in game_sessions and user_id in game_sessions[chat_id]["players"]:
+        del game_sessions[chat_id]["players"][user_id]
+        return True
+    return False
