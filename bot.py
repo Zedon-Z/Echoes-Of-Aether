@@ -13,6 +13,9 @@ def set_bot_commands(updater):
         BotCommand("forcestart", "Force the game to begin"),
         BotCommand("vote", "Vote to eliminate a player"),
         BotCommand("getchatid", "Get the current group chat ID"),
+        BotCommand("flee", "Leave the game lobby before the game starts"),
+        BotCommand("extendtime", "Extend the countdown timer"),
+        BotCommand("cancelgame", "Cancel the game before it starts"),
         BotCommand("authorize", "Authorize this group (admin only)"),
         BotCommand("deauthorize", "Deauthorize this group (admin only)")
     ]
